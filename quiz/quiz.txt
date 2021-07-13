@@ -1,0 +1,144 @@
+//Test
+
+const DATA = [
+    {
+        question: "Питання один",
+        answers: [
+            {
+                id: "0",
+                value: "1",
+                correct: true,
+            },
+            {
+                id: "1",
+                value: "2",
+                correct: true,
+            },
+            {
+                id: "2",
+                value: "3",
+                correct: false,
+            },
+            {
+                id: "3",
+                value: "4",
+                correct: false,
+            },
+        ]
+    },
+    {
+        question: "Питання два",
+        answers: [
+            {
+                id: "4",
+                value: "5",
+                correct: false,
+            },
+            {
+                id: "5",
+                value: "6",
+                correct: true,
+            },
+        ]
+    },
+
+];
+
+let LocalResults = {};
+
+const quiz = document.getElementById("quiz");
+const questions = document.getElementById("questions");
+const indicator = document.getElementById("indicator");
+const results = document.getElementById("results");
+const btnNext = document.getElementById("btn_next");
+const btnRestart = document.getElementById("btn_restart");
+
+const renderQuestions = (index) => {
+    renderIndicator(index + 1);
+    questions.dataset.currentStep = index;
+    const renderAnswers = () => DATA[index].answers.map((answer) =>
+            `  <li>
+                  <label>
+                      <input class = "answer_input" type="radio" name=${index} value = ${answer.id}>
+                      ${answer.value}
+                  </label>
+               </li>`
+        ).join("");
+    questions.innerHTML = `
+                <div class="quiz_questions-item">
+                    <div class="quiz_questions-item-question">${DATA[index].question}</div>
+                    <ul class="quiz_questions-item-answers">${renderAnswers()}</ul>                     
+                </div>`;
+}
+const renderResults = () => {
+    let content = "";
+
+    const getClassName = (answer,questionIndex) =>{
+        let className = "";
+        if(!answer.correct && answer.id === LocalResults[questionIndex]){
+            className = "answer-invalid";
+        }else if(answer.correct){
+            className = "answer-valid";
+        }
+        return className = "";
+    };
+    const getAnswers = (questionIndex) =>DATA[questionIndex].answers.map((answer) => `<li class=${getClassName()}>${answer.value}</li>`
+    )
+            .join("");
+
+    DATA.forEach((question, index) => {
+        content += `       <div class="quiz_results-item">
+                                <div class="quiz_results-item-question">${question.question}</div>
+                                <ul class="quiz_results-item-answers">${getAnswers(index)}</ul>                                        
+                           </div>`;
+    })
+    results.innerHTML = content;
+
+};
+const renderIndicator = (currentStep) => {
+    indicator.innerHTML = `${currentStep}/${DATA.length}`;
+};
+
+quiz.addEventListener("change", (event) => {
+    //logic of answers
+    LocalResults[event.target.name] = event.target.value;
+    btnNext.disabled = false;
+});
+
+quiz.addEventListener("click", (event) => {
+    //move on or restart
+    if (event.target.classList.contains("btn_next")) {
+        const nextQuestionIndex = Number(questions.dataset.currentStep) + 1;
+
+        if (DATA.length === nextQuestionIndex) {
+            //перехід до результатів
+            questions.classList.add("questions-hidden")
+            indicator.classList.add("indicator-hidden")
+            results.classList.add("results-visible")
+            btnNext.classList.add("btnNext-hidden")
+            btnRestart.classList.add("btn_restart-visible")
+            renderResults();
+
+        } else {
+            //перехід до наступного питання
+            renderQuestions(nextQuestionIndex);
+        }
+        btnNext.disabled = true;
+    }
+
+    if(event.target.classList.contains("btn_restart")){
+        LocalResults = {};
+        results.innerHTML = "";
+
+        questions.classList.remove("questions-hidden")
+        indicator.classList.remove("indicator-hidden")
+        results.classList.remove("results-visible")
+        btnNext.classList.remove("btnNext-hidden")
+        btnRestart.classList.remove("btn_restart-visible")
+
+        renderQuestions(0);//поновно виводимо питання
+    }
+});
+
+renderQuestions(0);
+
